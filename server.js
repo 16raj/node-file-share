@@ -9,26 +9,23 @@ import downloadRouter from './routes/download.js';
 import showRouter from './routes/show.js';
 import indexRouter from './routes/index.js';
 
-
-
 dotenv.config();
 connectDB();
-
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-app.all('*', (req, res, next) =>{
-  if(req.secure) {
-    return next();
-  }
-  else {
-    res.redirect(307, 'https://'+ req.hostname + ":" + PORT + req.url);
-  }
-})
-
 
 const __dirname = path.resolve();
+
+if(process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https')
+      res.redirect(`https://${req.header('host')}${req.url}`)
+    else
+      next()
+  })
+}
 app.use(express.static(path.join(__dirname,"public")));
 
 app.use(express.json());
